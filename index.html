@@ -3,633 +3,769 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Brian Fellows' Weather Safari</title>
+  <title>Go Outside?</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;900&display=swap');
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --gold: #f5c518;
-      --brown: #5c3317;
-      --green: #2d6a4f;
-      --sky: #90e0ef;
-      --orange: #f4813a;
-      --red: #e63946;
-      --cream: #fdf8f0;
-      --dark: #1a1a2e;
+      --bg:        #000;
+      --surface:   #111;
+      --border:    #222;
+      --border-hi: #444;
+      --text:      #fff;
+      --muted:     #666;
+      --dim:       #333;
+      --mono:      'Space Mono', monospace;
+      --sans:      'Space Grotesk', system-ui, sans-serif;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { background: var(--bg); color: var(--text); font-family: var(--sans); }
 
     body {
-      font-family: 'Nunito', sans-serif;
-      background: var(--dark);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
+      padding-bottom: 60px;
     }
 
-    /* ── Header ── */
-    header {
+    /* ── top bar ── */
+    .topbar {
       width: 100%;
-      background: linear-gradient(135deg, var(--brown) 0%, #3a1f0d 100%);
-      padding: 18px 24px;
+      border-bottom: 1px solid var(--border);
+      padding: 20px 24px;
       display: flex;
       align-items: center;
-      justify-content: center;
+      justify-content: space-between;
       gap: 16px;
-      border-bottom: 5px solid var(--gold);
-      position: relative;
     }
-    header h1 {
-      font-family: 'Fredoka One', cursive;
-      color: var(--gold);
-      font-size: clamp(1.4rem, 4vw, 2.2rem);
-      text-shadow: 2px 2px 0 #000;
-      letter-spacing: 1px;
-    }
-    .hat-icon { font-size: 2.4rem; }
-
-    /* ── Search bar ── */
-    .search-wrap {
-      display: flex;
-      gap: 10px;
-      margin: 28px 0 0;
-      width: 100%;
-      max-width: 540px;
-      padding: 0 16px;
-    }
-    .search-wrap input {
-      flex: 1;
-      padding: 13px 18px;
-      border-radius: 50px;
-      border: 3px solid var(--gold);
-      font-family: 'Nunito', sans-serif;
-      font-size: 1rem;
+    .logo {
+      font-family: var(--mono);
+      font-size: 0.75rem;
       font-weight: 700;
-      background: #fff;
-      outline: none;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text);
     }
-    .search-wrap input:focus { border-color: var(--orange); }
-    .search-wrap button {
-      padding: 13px 22px;
-      border-radius: 50px;
+    .logo span { color: var(--muted); }
+
+    /* ── search ── */
+    .search-row {
+      display: flex;
+      gap: 0;
+      width: 100%;
+      max-width: 560px;
+      margin: 32px 16px 0;
+      border: 1px solid var(--border-hi);
+    }
+    .search-row input {
+      flex: 1;
+      background: transparent;
       border: none;
-      background: var(--gold);
-      color: var(--brown);
-      font-family: 'Fredoka One', cursive;
-      font-size: 1rem;
+      outline: none;
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 0.95rem;
+      font-weight: 500;
+      padding: 14px 18px;
+    }
+    .search-row input::placeholder { color: var(--muted); }
+    .search-row button {
+      background: var(--text);
+      color: var(--bg);
+      border: none;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 14px 20px;
       cursor: pointer;
-      transition: transform .1s, background .2s;
+      transition: opacity .15s;
       white-space: nowrap;
     }
-    .search-wrap button:hover { background: var(--orange); color: #fff; transform: scale(1.04); }
+    .search-row button:hover { opacity: .8; }
 
-    /* ── Main card ── */
-    .main-card {
-      background: linear-gradient(160deg, #16213e 0%, #0f3460 100%);
-      border: 3px solid #ffffff22;
-      border-radius: 24px;
-      padding: 28px 32px;
-      margin: 22px 16px 0;
-      width: 100%;
-      max-width: 700px;
-      display: none;
-    }
-    .main-card.visible { display: block; }
-
-    /* ── Current weather ── */
-    .current-section {
+    /* ── toggle ── */
+    .toggle-wrap {
       display: flex;
-      flex-wrap: wrap;
-      align-items: flex-start;
-      gap: 16px;
+      margin-top: 32px;
+      border: 1px solid var(--border-hi);
     }
-    .location-row {
-      width: 100%;
+    .toggle-btn {
+      background: transparent;
+      color: var(--muted);
+      border: none;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      padding: 11px 28px;
+      cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
+      transition: color .15s, background .15s;
+    }
+    .toggle-btn.active {
+      background: var(--text);
+      color: var(--bg);
+    }
+    .toggle-btn:not(.active):hover { color: var(--text); }
+
+    /* ── main panel ── */
+    .panel {
+      width: 100%;
+      max-width: 560px;
+      margin: 28px 16px 0;
+      display: none;
+      flex-direction: column;
+      gap: 1px;
+      border: 1px solid var(--border);
+    }
+    .panel.visible { display: flex; }
+
+    .section {
+      background: var(--surface);
+      padding: 28px 28px;
+      border-bottom: 1px solid var(--border);
+    }
+    .section:last-child { border-bottom: none; }
+
+    /* ── location + date ── */
+    .location-line {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
       flex-wrap: wrap;
     }
-    .location-name {
-      font-family: 'Fredoka One', cursive;
-      font-size: 1.6rem;
-      color: #fff;
+    .location-city {
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
     }
-    .location-date { color: #aac8e4; font-size: 0.9rem; font-weight: 700; }
+    .location-date {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+    }
 
-    .weather-icon-big { font-size: 5rem; line-height: 1; }
-
-    .temp-block { flex: 1; min-width: 120px; }
-    .temp-big {
-      font-family: 'Fredoka One', cursive;
-      font-size: 3.6rem;
-      color: var(--gold);
+    /* ── big score ── */
+    .score-section { text-align: left; }
+    .score-number {
+      font-family: var(--mono);
+      font-size: clamp(5rem, 20vw, 8rem);
+      font-weight: 700;
       line-height: 1;
+      letter-spacing: -0.04em;
     }
-    .feels-like { color: #aac8e4; font-size: 0.88rem; font-weight: 700; margin-top: 4px; }
-    .condition-label {
-      color: #fff;
-      font-weight: 900;
-      font-size: 1rem;
-      margin-top: 6px;
+    .score-bar-track {
+      height: 3px;
+      background: var(--dim);
+      margin: 16px 0 12px;
+      width: 100%;
+    }
+    .score-bar-fill {
+      height: 100%;
+      background: var(--text);
+      transition: width .6s cubic-bezier(.16,1,.3,1);
+    }
+    .score-label {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
       text-transform: uppercase;
-      letter-spacing: 1px;
+      color: var(--muted);
+    }
+    .score-verdict {
+      font-size: 1.55rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      margin-top: 4px;
     }
 
-    .detail-grid {
+    /* ── conditions grid ── */
+    .conditions-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-top: 16px;
-      width: 100%;
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      margin: 0 -28px -28px;
     }
-    .detail-chip {
-      background: #ffffff14;
-      border-radius: 12px;
-      padding: 10px 14px;
+    .cond-cell {
+      background: var(--surface);
+      padding: 18px 20px;
       display: flex;
-      align-items: center;
-      gap: 8px;
+      flex-direction: column;
+      gap: 6px;
     }
-    .detail-chip .icon { font-size: 1.3rem; }
-    .detail-chip .label { color: #aac8e4; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; }
-    .detail-chip .value { color: #fff; font-weight: 900; font-size: 0.96rem; }
-
-    /* ── Brian Fellows speech bubble ── */
-    .brian-section {
-      display: flex;
-      align-items: flex-end;
-      gap: 14px;
-      margin-top: 26px;
-      flex-wrap: wrap;
+    .cond-label {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
     }
-    .brian-avatar {
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #8B6914, #5c3317);
-      border: 4px solid var(--gold);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 2.8rem;
-      flex-shrink: 0;
-      position: relative;
-      overflow: visible;
-    }
-    .brian-avatar::after {
-      content: '🎖️';
-      position: absolute;
-      bottom: -6px;
-      right: -6px;
-      font-size: 1.2rem;
-    }
-    .bubble {
-      flex: 1;
-      min-width: 200px;
-      background: var(--gold);
-      color: #1a0a00;
-      border-radius: 18px 18px 18px 4px;
-      padding: 14px 18px;
-      position: relative;
+    .cond-value {
+      font-family: var(--mono);
+      font-size: 1.1rem;
       font-weight: 700;
-      font-size: 0.97rem;
-      line-height: 1.5;
-      border: 3px solid var(--brown);
     }
-    .bubble::before {
-      content: '';
-      position: absolute;
-      left: -14px;
-      bottom: 16px;
-      border-width: 7px 14px 7px 0;
-      border-style: solid;
-      border-color: transparent var(--brown) transparent transparent;
-    }
-    .bubble::after {
-      content: '';
-      position: absolute;
-      left: -10px;
-      bottom: 18px;
-      border-width: 5px 11px 5px 0;
-      border-style: solid;
-      border-color: transparent var(--gold) transparent transparent;
-    }
-    .bubble .catchphrase {
-      display: block;
-      margin-top: 8px;
-      font-family: 'Fredoka One', cursive;
-      color: var(--red);
-      font-size: 1.05rem;
-      letter-spacing: .5px;
-    }
-
-    /* ── Forecast strip ── */
-    .forecast-title {
-      font-family: 'Fredoka One', cursive;
-      color: var(--gold);
-      font-size: 1.2rem;
-      margin: 26px 0 12px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .forecast-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
-      gap: 10px;
-    }
-    .forecast-card {
-      background: #ffffff0e;
-      border: 2px solid #ffffff1a;
-      border-radius: 14px;
-      padding: 12px 8px;
-      text-align: center;
-      transition: transform .15s, background .15s;
-      cursor: default;
-    }
-    .forecast-card:hover { background: #ffffff1e; transform: translateY(-3px); }
-    .forecast-card.today { border-color: var(--gold); background: #f5c51820; }
-    .forecast-day { color: #aac8e4; font-size: 0.75rem; font-weight: 900; text-transform: uppercase; margin-bottom: 6px; }
-    .forecast-icon { font-size: 1.9rem; margin: 4px 0; }
-    .forecast-high { color: var(--gold); font-weight: 900; font-size: 0.96rem; }
-    .forecast-low { color: #aac8e4; font-weight: 700; font-size: 0.82rem; }
-
-    /* ── Loading / error states ── */
-    .status-msg {
-      color: #aac8e4;
-      font-weight: 700;
-      text-align: center;
-      margin: 40px 0;
-      font-size: 1.05rem;
-    }
-    .status-msg .spin {
-      display: inline-block;
-      animation: spin 1s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .error-msg {
-      color: var(--red);
-      background: #e6394620;
-      border: 2px solid var(--red);
-      border-radius: 12px;
-      padding: 14px 18px;
-      margin: 20px 16px 0;
-      font-weight: 700;
-      max-width: 700px;
-      width: calc(100% - 32px);
-      text-align: center;
-    }
-
-    /* ── Footer ── */
-    footer {
-      color: #ffffff30;
+    .cond-note {
       font-size: 0.75rem;
-      text-align: center;
-      padding: 30px 16px 20px;
+      color: var(--muted);
+    }
+    .cond-note.good  { color: #fff; }
+    .cond-note.ok    { color: #888; }
+    .cond-note.bad   { color: #555; text-decoration: line-through; }
+
+    /* ── factor breakdown ── */
+    .factors-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .factor-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .factor-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .factor-dot.good { background: #fff; }
+    .factor-dot.ok   { background: #666; }
+    .factor-dot.bad  { background: #333; border: 1px solid #666; }
+    .factor-name {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      width: 90px;
+      flex-shrink: 0;
+    }
+    .factor-bar-track {
+      flex: 1;
+      height: 2px;
+      background: var(--dim);
+    }
+    .factor-bar-fill {
+      height: 100%;
+      background: var(--text);
+      transition: width .5s ease;
+    }
+    .factor-pct {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--muted);
+      width: 34px;
+      text-align: right;
+      flex-shrink: 0;
     }
 
-    /* responsive */
-    @media (max-width: 480px) {
-      .main-card { padding: 20px 16px; }
-      .temp-big { font-size: 2.8rem; }
-      .detail-grid { grid-template-columns: 1fr 1fr; }
+    /* ── section header ── */
+    .section-header {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 20px;
+    }
+
+    /* ── Summary note ── */
+    .summary-text {
+      font-size: 0.9rem;
+      line-height: 1.7;
+      color: #ccc;
+    }
+
+    /* ── 7-day forecast ── */
+    .forecast-row {
+      display: flex;
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      margin: 0 -28px -28px;
+      overflow-x: auto;
+    }
+    .forecast-day-cell {
+      background: var(--surface);
+      flex: 1;
+      min-width: 60px;
+      padding: 16px 10px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    .forecast-day-cell.best { background: #1a1a1a; }
+    .fd-name {
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .fd-emoji { font-size: 1.3rem; }
+    .fd-score {
+      font-family: var(--mono);
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+    .fd-score.hi  { color: #fff; }
+    .fd-score.mid { color: #888; }
+    .fd-score.lo  { color: #444; }
+    .fd-temp {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* ── loading / error ── */
+    .status-line {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 40px 0;
+      text-align: center;
+    }
+    .err-panel {
+      width: 100%;
+      max-width: 560px;
+      margin: 20px 16px 0;
+      padding: 18px 20px;
+      border: 1px solid var(--border-hi);
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      color: var(--muted);
+      display: none;
+    }
+
+    @media (max-width: 400px) {
+      .section { padding: 22px 18px; }
+      .conditions-grid { margin: 0 -18px -22px; }
+      .forecast-row    { margin: 0 -18px -22px; }
     }
   </style>
 </head>
 <body>
 
-<header>
-  <span class="hat-icon">🦁</span>
-  <h1>Brian Fellows' Weather Safari</h1>
-  <span class="hat-icon">🌿</span>
-</header>
-
-<div class="search-wrap">
-  <input type="text" id="locationInput" placeholder="Enter city (e.g. New York)" />
-  <button id="searchBtn">Go Safari!</button>
+<div class="topbar">
+  <div class="logo">GO OUTSIDE? <span>// weather for athletes</span></div>
 </div>
 
-<div id="errorMsg" class="error-msg" style="display:none;"></div>
-
-<div id="mainCard" class="main-card">
-  <div id="statusMsg" class="status-msg" style="display:none;">
-    <span class="spin">🌍</span> Brian Fellows is surveying the weather...
-  </div>
-
-  <div id="weatherContent" style="display:none;">
-    <!-- Current weather -->
-    <div class="current-section">
-      <div class="location-row">
-        <span class="location-name" id="locationName">—</span>
-        <span class="location-date" id="locationDate">—</span>
-      </div>
-      <div class="weather-icon-big" id="currentIcon">🌤️</div>
-      <div class="temp-block">
-        <div class="temp-big" id="currentTemp">—</div>
-        <div class="feels-like" id="feelsLike">Feels like —</div>
-        <div class="condition-label" id="conditionLabel">—</div>
-      </div>
-      <div class="detail-grid">
-        <div class="detail-chip">
-          <span class="icon">💨</span>
-          <div>
-            <div class="label">Wind</div>
-            <div class="value" id="wind">—</div>
-          </div>
-        </div>
-        <div class="detail-chip">
-          <span class="icon">💧</span>
-          <div>
-            <div class="label">Humidity</div>
-            <div class="value" id="humidity">—</div>
-          </div>
-        </div>
-        <div class="detail-chip">
-          <span class="icon">👁️</span>
-          <div>
-            <div class="label">Visibility</div>
-            <div class="value" id="visibility">—</div>
-          </div>
-        </div>
-        <div class="detail-chip">
-          <span class="icon">🌡️</span>
-          <div>
-            <div class="label">UV Index</div>
-            <div class="value" id="uvIndex">—</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Brian Fellows commentary -->
-    <div class="brian-section">
-      <div class="brian-avatar">🧑🏾</div>
-      <div class="bubble">
-        <span id="brianQuote">Loading Brian's thoughts...</span>
-        <span class="catchphrase" id="brianCatchphrase">I'M BRIAN FELLOWS!</span>
-      </div>
-    </div>
-
-    <!-- 7-day forecast -->
-    <div class="forecast-title">🗓️ 7-Day Safari Forecast</div>
-    <div class="forecast-grid" id="forecastGrid"></div>
-  </div>
+<div class="search-row">
+  <input type="text" id="locInput" placeholder="City or location…" />
+  <button id="searchBtn">Search</button>
 </div>
 
-<footer>Weather data from Open-Meteo · "That's crazy!" — Brian Fellows</footer>
+<div class="toggle-wrap">
+  <button class="toggle-btn active" data-mode="run" id="runBtn">
+    <span>🏃</span> Run
+  </button>
+  <button class="toggle-btn" data-mode="bike" id="bikeBtn">
+    <span>🚲</span> Bike
+  </button>
+</div>
+
+<div id="errPanel" class="err-panel"></div>
+<div id="statusLine" class="status-line" style="display:none;"></div>
+
+<div id="panel" class="panel">
+
+  <!-- Location + date -->
+  <div class="section" style="padding-bottom:22px;">
+    <div class="location-line">
+      <span class="location-city" id="cityName">—</span>
+      <span class="location-date" id="todayDate">—</span>
+    </div>
+  </div>
+
+  <!-- Score -->
+  <div class="section score-section">
+    <div class="score-label" id="scoreLabel">OVERALL SCORE</div>
+    <div class="score-number" id="scoreNum">—</div>
+    <div class="score-bar-track">
+      <div class="score-bar-fill" id="scoreBar" style="width:0%"></div>
+    </div>
+    <div class="score-verdict" id="scoreVerdict">—</div>
+
+    <!-- Conditions grid flush to bottom of section -->
+    <div class="conditions-grid" style="margin-top:24px;">
+      <div class="cond-cell">
+        <div class="cond-label">Temp</div>
+        <div class="cond-value" id="cTemp">—</div>
+        <div class="cond-note" id="cTempNote">—</div>
+      </div>
+      <div class="cond-cell">
+        <div class="cond-label">Wind</div>
+        <div class="cond-value" id="cWind">—</div>
+        <div class="cond-note" id="cWindNote">—</div>
+      </div>
+      <div class="cond-cell">
+        <div class="cond-label">Humidity</div>
+        <div class="cond-value" id="cHum">—</div>
+        <div class="cond-note" id="cHumNote">—</div>
+      </div>
+      <div class="cond-cell">
+        <div class="cond-label">Conditions</div>
+        <div class="cond-value" id="cCond">—</div>
+        <div class="cond-note" id="cCondNote">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Factor breakdown -->
+  <div class="section">
+    <div class="section-header">What's affecting your score</div>
+    <div class="factors-list" id="factorsList"></div>
+  </div>
+
+  <!-- Summary -->
+  <div class="section">
+    <div class="section-header">Summary</div>
+    <div class="summary-text" id="summaryText">—</div>
+  </div>
+
+  <!-- 7-day forecast -->
+  <div class="section">
+    <div class="section-header">7-day outlook</div>
+    <div class="forecast-row" id="forecastRow"></div>
+  </div>
+
+</div>
 
 <script>
-  // ── WMO weather code → description & emoji ──────────────────────────────
+  // ── State ────────────────────────────────────────────────────────────────
+  let mode = 'run'; // 'run' | 'bike'
+  let cachedGeo  = null;
+  let cachedData = null;
+
+  // ── WMO codes ────────────────────────────────────────────────────────────
   const WMO = {
-    0:  { label: 'Clear Sky',          emoji: '☀️' },
-    1:  { label: 'Mostly Clear',       emoji: '🌤️' },
-    2:  { label: 'Partly Cloudy',      emoji: '⛅' },
-    3:  { label: 'Overcast',           emoji: '☁️' },
-    45: { label: 'Foggy',              emoji: '🌫️' },
-    48: { label: 'Icy Fog',            emoji: '🌫️' },
-    51: { label: 'Light Drizzle',      emoji: '🌦️' },
-    53: { label: 'Drizzle',            emoji: '🌦️' },
-    55: { label: 'Heavy Drizzle',      emoji: '🌧️' },
-    61: { label: 'Light Rain',         emoji: '🌧️' },
-    63: { label: 'Rain',               emoji: '🌧️' },
-    65: { label: 'Heavy Rain',         emoji: '🌧️' },
-    66: { label: 'Freezing Rain',      emoji: '🌨️' },
-    67: { label: 'Heavy Freezing Rain',emoji: '🌨️' },
-    71: { label: 'Light Snow',         emoji: '🌨️' },
-    73: { label: 'Snow',               emoji: '❄️' },
-    75: { label: 'Heavy Snow',         emoji: '❄️' },
-    77: { label: 'Snow Grains',        emoji: '🌨️' },
-    80: { label: 'Rain Showers',       emoji: '🌦️' },
-    81: { label: 'Rain Showers',       emoji: '🌧️' },
-    82: { label: 'Violent Showers',    emoji: '⛈️' },
-    85: { label: 'Snow Showers',       emoji: '🌨️' },
-    86: { label: 'Heavy Snow Showers', emoji: '❄️' },
-    95: { label: 'Thunderstorm',       emoji: '⛈️' },
-    96: { label: 'Thunderstorm + Hail',emoji: '⛈️' },
-    99: { label: 'Severe Thunderstorm',emoji: '🌩️' },
+    0:  { label: 'Clear',            emoji: '☀️',  wxScore: { run: 100, bike: 100 } },
+    1:  { label: 'Mostly clear',     emoji: '🌤️', wxScore: { run: 97,  bike: 97  } },
+    2:  { label: 'Partly cloudy',    emoji: '⛅',  wxScore: { run: 90,  bike: 88  } },
+    3:  { label: 'Overcast',         emoji: '☁️',  wxScore: { run: 72,  bike: 68  } },
+    45: { label: 'Foggy',            emoji: '🌫️', wxScore: { run: 42,  bike: 28  } },
+    48: { label: 'Icy fog',          emoji: '🌫️', wxScore: { run: 30,  bike: 18  } },
+    51: { label: 'Light drizzle',    emoji: '🌦️', wxScore: { run: 32,  bike: 22  } },
+    53: { label: 'Drizzle',          emoji: '🌦️', wxScore: { run: 22,  bike: 14  } },
+    55: { label: 'Heavy drizzle',    emoji: '🌧️', wxScore: { run: 15,  bike: 8   } },
+    61: { label: 'Light rain',       emoji: '🌧️', wxScore: { run: 18,  bike: 10  } },
+    63: { label: 'Rain',             emoji: '🌧️', wxScore: { run: 10,  bike: 6   } },
+    65: { label: 'Heavy rain',       emoji: '🌧️', wxScore: { run: 5,   bike: 2   } },
+    66: { label: 'Freezing rain',    emoji: '🌨️', wxScore: { run: 5,   bike: 2   } },
+    67: { label: 'Heavy frz. rain',  emoji: '🌨️', wxScore: { run: 2,   bike: 1   } },
+    71: { label: 'Light snow',       emoji: '🌨️', wxScore: { run: 28,  bike: 15  } },
+    73: { label: 'Snow',             emoji: '❄️',  wxScore: { run: 18,  bike: 8   } },
+    75: { label: 'Heavy snow',       emoji: '❄️',  wxScore: { run: 8,   bike: 3   } },
+    77: { label: 'Snow grains',      emoji: '🌨️', wxScore: { run: 22,  bike: 10  } },
+    80: { label: 'Rain showers',     emoji: '🌦️', wxScore: { run: 20,  bike: 12  } },
+    81: { label: 'Rain showers',     emoji: '🌧️', wxScore: { run: 12,  bike: 7   } },
+    82: { label: 'Violent showers',  emoji: '⛈️',  wxScore: { run: 4,   bike: 2   } },
+    85: { label: 'Snow showers',     emoji: '🌨️', wxScore: { run: 18,  bike: 8   } },
+    86: { label: 'Heavy snow showers', emoji: '❄️', wxScore: { run: 6,  bike: 3   } },
+    95: { label: 'Thunderstorm',     emoji: '⛈️',  wxScore: { run: 0,   bike: 0   } },
+    96: { label: 'T-storm + hail',   emoji: '⛈️',  wxScore: { run: 0,   bike: 0   } },
+    99: { label: 'Severe T-storm',   emoji: '🌩️', wxScore: { run: 0,   bike: 0   } },
   };
+  function wmo(code) { return WMO[code] || { label: 'Unknown', emoji: '🌡️', wxScore: { run: 50, bike: 50 } }; }
 
-  // ── Brian Fellows quotes ────────────────────────────────────────────────
-  const BRIAN_QUOTES = {
-    clear: [
-      "That big ball of fire up in the sky is shinin' right in my eyes! My eyes are all big! It don't make no sense that it can do that from all the way up there!",
-      "The sun is out today, and it is HOT. I think the sun knows I'm here and it is PERSONALLY tryin' to heat me up. That's not right.",
-      "There ain't a cloud in the sky! Where they go?! They was just here! I don't trust it. They probably hidin' behind the sun, schemin'.",
-    ],
-    cloudy: [
-      "Them big gray fluffy things up there are just floatin' around like they own the sky! I don't know how they stay up there. I didn't go to college but I know that ain't natural!",
-      "The clouds is blockin' the sun today. They work together! They got a whole operation goin' on up there. That's crazy!",
-      "It's all cloudy out. The sky looks like my grandma's carpet. Gray and heavy. I don't like it one bit.",
-    ],
-    fog: [
-      "I can't see NOTHIN' out there! The fog is STEALIN' MY VISION! My eyes are all big! That ain't right! That ain't right at all!",
-      "It's real foggy today. I walked outside and couldn't see my hand in front of my face. The fog is personal. It came HERE specifically. That's crazy!",
-      "There's a big cloud on the GROUND! How'd it get down there?! It's supposed to be in the SKY! I didn't go to college but I know that ain't right!",
-    ],
-    drizzle: [
-      "It's doin' that thing where it rains but just barely. Like the sky is thinkin' about it but ain't fully committed. Make up your mind, sky!",
-      "There's this little tiny rain comin' down. It can't even rain right! The drizzle is weak. It's a coward rain. I don't respect it.",
-      "The sky is spittin' on me! Just a little bit, but still! That's disrespectful! That's CRAZY!",
-    ],
-    rain: [
-      "All that water is comin' out of the sky! WHERE IS IT COMIN' FROM?! The sky don't got no pipes! I don't understand it! My eyes are all big!",
-      "It's rainin' outside and every single one of them drops is fallin' DOWN. Why don't some of them fall UP?! The rain is too comfortable just going one direction!",
-      "I went outside in the rain and got WET. The rain got on me. I didn't give it permission! That's CRAZY!",
-    ],
-    snow: [
-      "There's cold white stuff fallin' from the sky! It looks like the clouds is sheddin'! Like a big fluffy dog up there just losin' all its fur! That ain't right!",
-      "The snow is everywhere! On the ground, on the trees, on MY CAR! It's coverin' everything up! The snow is hidin' things from me! I don't trust it!",
-      "I picked up some snow and it turned into water in my hands! It TRANSFORMED! Right in my hand! The snow is magic and I don't appreciate it!",
-    ],
-    thunderstorm: [
-      "The SKY is YELLIN' at me! Real loud! And then it FLASHES! The sky is ANGRY and it is PERSONALLY MAD AT ME! My eyes are all big! THAT'S CRAZY!",
-      "There's lightning out there! The sky is shootin' electricity! WHERE IS IT GETTING ALL THAT ELECTRICITY FROM?! There ain't no outlet up there! I didn't go to college but I KNOW that!",
-      "Thunder and lightning both came to visit today. They travel together like a crew. The sky got a whole GANG! That ain't right! That ain't right at all!",
-    ],
-    hot: [
-      "It is SO hot out today! The air itself is hot! I breathed in and the AIR burned my lungs! The air is BETRAYING ME! That's crazy!",
-      "It's real hot today. The concrete is hot, the car is hot, the AIR is hot. Everything is conspiring to heat me up. I see what's happening. I'm Brian Fellows!",
-      "This heat is something else. I sweated through my shirt and the sweat is HOT too! Even my sweat is hot! That ain't supposed to happen!",
-    ],
-    cold: [
-      "It is FREEZING out there! The cold air got in my jacket! My jacket is supposed to STOP that! The cold found a way in! It's crafty! That's crazy!",
-      "The temperature is real low today. I blew on my hands to warm them up and my BREATH came out as a cloud! My body makes CLOUDS! My eyes are all big!",
-      "It's cold AND windy. The cold is chasing me! Every time I turned around, there it was! The cold knows where I live! I don't appreciate that!",
-    ],
-    windy: [
-      "The wind is pushing on my face! I can't SEE the wind but I can FEEL it! It's invisible! The invisible force is TOUCHING me! That ain't right!",
-      "It's so windy today that my hat blew off! The wind TOOK my hat! I want it back! The wind is a THIEF and nobody is doing NOTHIN' about it! That's crazy!",
-      "The wind is blowin' everything around. Leaves, trash, my papers — the wind don't care what it moves! It's just takin' things! It's got NO RESPECT for property!",
-    ],
-  };
-
-  const CATCHPHRASES = [
-    "I'M BRIAN FELLOWS!",
-    "THAT'S CRAZY!",
-    "MY EYES ARE ALL BIG!",
-    "I DIDN'T GO TO COLLEGE!",
-    "THAT AIN'T RIGHT!",
-    "I'M BRIAN FELLOWS AND THIS IS MY SAFARI ADVENTURE!",
-  ];
-
-  function getBrianQuote(wmoCode, tempC, windKph) {
-    const hasPrecip = [51,53,55,61,63,65,66,67,80,81,82].includes(wmoCode);
-    const hasSnow   = [71,73,75,77,85,86].includes(wmoCode);
-    const hasThunder= [95,96,99].includes(wmoCode);
-    const hasFog    = [45,48].includes(wmoCode);
-    const hasDrizzle= [51,53,55].includes(wmoCode);
-    const isWind    = windKph > 30;
-    const isHot     = tempC > 30;
-    const isCold    = tempC < 2;
-    const isClear   = [0,1].includes(wmoCode);
-    const isCloudy  = [2,3].includes(wmoCode);
-
-    let pool;
-    if (hasThunder)       pool = BRIAN_QUOTES.thunderstorm;
-    else if (hasSnow)     pool = BRIAN_QUOTES.snow;
-    else if (hasFog)      pool = BRIAN_QUOTES.fog;
-    else if (hasDrizzle)  pool = BRIAN_QUOTES.drizzle;
-    else if (hasPrecip)   pool = BRIAN_QUOTES.rain;
-    else if (isCold)      pool = BRIAN_QUOTES.cold;
-    else if (isHot)       pool = BRIAN_QUOTES.hot;
-    else if (isWind)      pool = BRIAN_QUOTES.windy;
-    else if (isClear)     pool = BRIAN_QUOTES.clear;
-    else if (isCloudy)    pool = BRIAN_QUOTES.cloudy;
-    else                  pool = BRIAN_QUOTES.clear;
-
-    const quote      = pool[Math.floor(Math.random() * pool.length)];
-    const catchphrase= CATCHPHRASES[Math.floor(Math.random() * CATCHPHRASES.length)];
-    return { quote, catchphrase };
+  // ── Scoring ──────────────────────────────────────────────────────────────
+  function tempScore(t, m) {
+    // Ideal: run 8-16°C, bike 14-22°C
+    const [lo, hi] = m === 'run' ? [8, 16] : [14, 22];
+    const spread = 8;
+    if (t >= lo && t <= hi) return 100;
+    const dist = t < lo ? lo - t : t - hi;
+    return Math.max(0, Math.round(100 - dist * (100 / (spread * 2))));
   }
 
-  function wmo(code) {
-    return WMO[code] || { label: 'Unknown', emoji: '🌡️' };
+  function windScore(w, m) {
+    // Bikers penalised harder for wind (headwind drag)
+    if (m === 'run') {
+      if (w <= 10) return 100;
+      if (w <= 20) return Math.round(100 - (w - 10) * 2.5);
+      if (w <= 35) return Math.round(75 - (w - 20) * 3);
+      return Math.max(0, Math.round(30 - (w - 35) * 2));
+    } else {
+      if (w <= 12) return 100;
+      if (w <= 24) return Math.round(100 - (w - 12) * 4);
+      if (w <= 40) return Math.round(52 - (w - 24) * 3);
+      return Math.max(0, Math.round(4 - (w - 40)));
+    }
   }
 
-  function dayName(dateStr, index) {
-    if (index === 0) return 'TODAY';
-    const d = new Date(dateStr + 'T12:00:00');
-    return d.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+  function humScore(h) {
+    if (h <= 50) return 100;
+    if (h <= 70) return Math.round(100 - (h - 50) * 2);
+    return Math.max(20, Math.round(60 - (h - 70) * 1.5));
   }
 
-  function fmtDate(dateStr) {
-    const d = new Date(dateStr + 'T12:00:00');
-    return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  function calcScore(temp, wind, hum, wmoCode, m) {
+    const ws  = wmo(wmoCode).wxScore[m];
+    const ts  = tempScore(temp, m);
+    const wns = windScore(wind, m);
+    const hs  = humScore(hum);
+    if (m === 'run') {
+      return Math.round(ts * 0.32 + wns * 0.24 + ws * 0.32 + hs * 0.12);
+    } else {
+      return Math.round(ts * 0.28 + wns * 0.38 + ws * 0.28 + hs * 0.06);
+    }
   }
 
-  // ── API calls ───────────────────────────────────────────────────────────
-  async function geocode(query) {
-    const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=1&language=en&format=json`;
+  function calcDailyScore(tMax, tMin, wind, wmoCode, m) {
+    const t = (tMax + tMin) / 2;
+    return calcScore(t, wind, 60, wmoCode, m);
+  }
+
+  function verdict(s, m) {
+    const act = m === 'run' ? 'run' : 'ride';
+    if (s >= 88) return `Perfect ${act} day.`;
+    if (s >= 72) return `Great day to ${act}.`;
+    if (s >= 55) return `Decent. Could be worse.`;
+    if (s >= 38) return `Tough conditions.`;
+    if (s >= 20) return `Better to skip it.`;
+    return `Stay home.`;
+  }
+
+  function ratingClass(s) {
+    if (s >= 70) return 'hi';
+    if (s >= 42) return 'mid';
+    return 'lo';
+  }
+
+  function noteClass(v, goodAbove, badBelow) {
+    if (v >= goodAbove) return 'good';
+    if (v <= badBelow)  return 'bad';
+    return 'ok';
+  }
+
+  // ── Plain-language summary ───────────────────────────────────────────────
+  function summaryText(score, temp, wind, hum, wmoCode, m) {
+    const act   = m === 'run' ? 'running' : 'cycling';
+    const cond  = wmo(wmoCode).label.toLowerCase();
+    const parts = [];
+
+    if (score >= 88) {
+      parts.push(`Conditions are excellent for ${act} today.`);
+    } else if (score >= 68) {
+      parts.push(`Good conditions for ${act}.`);
+    } else if (score >= 45) {
+      parts.push(`Passable conditions for ${act}, but not ideal.`);
+    } else if (score >= 25) {
+      parts.push(`Difficult conditions — consider rescheduling your ${m === 'run' ? 'run' : 'ride'}.`);
+    } else {
+      parts.push(`Poor conditions. Best to skip ${act} today.`);
+    }
+
+    // Specifics
+    if (wmo(wmoCode).wxScore[m] < 35) parts.push(`${wmo(wmoCode).label} makes it hazardous.`);
+    if (m === 'bike' && wind > 30) parts.push(`Wind at ${Math.round(wind)} km/h will create significant headwind resistance.`);
+    if (m === 'run'  && wind > 25) parts.push(`Wind at ${Math.round(wind)} km/h will be noticeable.`);
+    if (hum > 78) parts.push(`High humidity (${hum}%) will make effort feel harder.`);
+    const [lo, hi] = m === 'run' ? [8, 16] : [14, 22];
+    if (temp < lo - 4) parts.push(`Temperature is low — dress in layers.`);
+    if (temp > hi + 6) parts.push(`Temperature is high — stay hydrated.`);
+
+    return parts.join(' ');
+  }
+
+  // ── Render ───────────────────────────────────────────────────────────────
+  function render() {
+    if (!cachedData) return;
+    const c    = cachedData.current;
+    const d    = cachedData.daily;
+    const m    = mode;
+    const score = calcScore(c.temperature_2m, c.wind_speed_10m, c.relative_humidity_2m, c.weather_code, m);
+
+    document.getElementById('scoreNum').textContent  = score;
+    document.getElementById('scoreBar').style.width  = `${score}%`;
+    document.getElementById('scoreVerdict').textContent = verdict(score, m);
+    document.getElementById('scoreLabel').textContent   =
+      `${m === 'run' ? 'RUN SCORE' : 'BIKE SCORE'} — TODAY`;
+
+    // Condition chips
+    document.getElementById('cTemp').textContent = `${Math.round(c.temperature_2m)}°C`;
+    document.getElementById('cWind').textContent = `${Math.round(c.wind_speed_10m)} km/h`;
+    document.getElementById('cHum').textContent  = `${c.relative_humidity_2m}%`;
+    document.getElementById('cCond').textContent = wmo(c.weather_code).emoji;
+
+    const idealTempLo = m === 'run' ? 8 : 14;
+    const idealTempHi = m === 'run' ? 16 : 22;
+    const t = c.temperature_2m;
+    const w = c.wind_speed_10m;
+    const h = c.relative_humidity_2m;
+
+    function setNote(id, cls, txt) {
+      const el = document.getElementById(id);
+      el.textContent = txt;
+      el.className = `cond-note ${cls}`;
+    }
+    setNote('cTempNote', t >= idealTempLo && t <= idealTempHi ? 'good' : t < 0 || t > 32 ? 'bad' : 'ok',
+      t < idealTempLo ? 'a bit cold' : t > idealTempHi ? 'a bit warm' : 'ideal range');
+    setNote('cWindNote', w <= 12 ? 'good' : w >= 35 ? 'bad' : 'ok',
+      w <= 12 ? 'calm' : w <= 24 ? 'light breeze' : w <= 36 ? 'strong wind' : 'very windy');
+    setNote('cHumNote', h <= 55 ? 'good' : h >= 80 ? 'bad' : 'ok',
+      h <= 55 ? 'comfortable' : h <= 72 ? 'moderate' : 'high humidity');
+    setNote('cCondNote', wmo(c.weather_code).wxScore[m] >= 70 ? 'good'
+      : wmo(c.weather_code).wxScore[m] >= 35 ? 'ok' : 'bad',
+      wmo(c.weather_code).label);
+
+    // Factors
+    const factors = m === 'run'
+      ? [
+          { name: 'Temperature', pct: tempScore(c.temperature_2m, m) },
+          { name: 'Conditions',  pct: wmo(c.weather_code).wxScore[m] },
+          { name: 'Wind',        pct: windScore(c.wind_speed_10m, m) },
+          { name: 'Humidity',    pct: humScore(c.relative_humidity_2m) },
+        ]
+      : [
+          { name: 'Wind',        pct: windScore(c.wind_speed_10m, m) },
+          { name: 'Conditions',  pct: wmo(c.weather_code).wxScore[m] },
+          { name: 'Temperature', pct: tempScore(c.temperature_2m, m) },
+          { name: 'Humidity',    pct: humScore(c.relative_humidity_2m) },
+        ];
+
+    const fl = document.getElementById('factorsList');
+    fl.innerHTML = '';
+    for (const f of factors) {
+      const cls = f.pct >= 70 ? 'good' : f.pct >= 40 ? 'ok' : 'bad';
+      fl.innerHTML += `
+        <div class="factor-row">
+          <div class="factor-dot ${cls}"></div>
+          <div class="factor-name">${f.name}</div>
+          <div class="factor-bar-track">
+            <div class="factor-bar-fill" style="width:${f.pct}%"></div>
+          </div>
+          <div class="factor-pct">${f.pct}</div>
+        </div>`;
+    }
+
+    // Summary
+    document.getElementById('summaryText').textContent =
+      summaryText(score, c.temperature_2m, c.wind_speed_10m, c.relative_humidity_2m, c.weather_code, m);
+
+    // 7-day forecast
+    const fr = document.getElementById('forecastRow');
+    fr.innerHTML = '';
+    const scores = d.time.map((_, i) =>
+      calcDailyScore(d.temperature_2m_max[i], d.temperature_2m_min[i], d.wind_speed_10m_max[i], d.weather_code[i], m)
+    );
+    const bestScore = Math.max(...scores);
+
+    for (let i = 0; i < d.time.length; i++) {
+      const ds = scores[i];
+      const isBest = ds === bestScore;
+      const dayLabel = i === 0 ? 'Today' : new Date(d.time[i] + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' });
+      fr.innerHTML += `
+        <div class="forecast-day-cell${isBest ? ' best' : ''}">
+          <div class="fd-name">${dayLabel}</div>
+          <div class="fd-emoji">${wmo(d.weather_code[i]).emoji}</div>
+          <div class="fd-score ${ratingClass(ds)}">${ds}</div>
+          <div class="fd-temp">${Math.round(d.temperature_2m_max[i])}°<br/>${Math.round(d.temperature_2m_min[i])}°</div>
+        </div>`;
+    }
+  }
+
+  // ── API ──────────────────────────────────────────────────────────────────
+  async function geocode(q) {
+    const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=1&language=en&format=json`;
     const res = await fetch(url);
     const data = await res.json();
-    if (!data.results || data.results.length === 0) throw new Error(`Brian Fellows couldn't find "${query}" on his safari map!`);
+    if (!data.results?.length) throw new Error(`Can't find "${q}"`);
     return data.results[0];
   }
 
   async function fetchWeather(lat, lon) {
     const params = [
-      `latitude=${lat}`,
-      `longitude=${lon}`,
+      `latitude=${lat}`, `longitude=${lon}`,
       'current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weather_code,visibility',
-      'daily=weather_code,temperature_2m_max,temperature_2m_min,uv_index_max',
-      'timezone=auto',
-      'forecast_days=7',
+      'daily=weather_code,temperature_2m_max,temperature_2m_min,wind_speed_10m_max,uv_index_max',
+      'timezone=auto', 'forecast_days=7',
     ].join('&');
-    const url = `https://api.open-meteo.com/v1/forecast?${params}`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('Weather API failed. Even Brian Fellows is stumped!');
+    const res = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`);
+    if (!res.ok) throw new Error('Weather API failed');
     return res.json();
   }
 
-  // ── Render ──────────────────────────────────────────────────────────────
-  function renderWeather(geo, data) {
-    const c = data.current;
-    const d = data.daily;
-
-    // Current
-    document.getElementById('locationName').textContent = `${geo.name}, ${geo.country}`;
-    document.getElementById('locationDate').textContent  = fmtDate(d.time[0]);
-    document.getElementById('currentTemp').textContent   = `${Math.round(c.temperature_2m)}°C`;
-    document.getElementById('feelsLike').textContent     = `Feels like ${Math.round(c.apparent_temperature)}°C`;
-    document.getElementById('conditionLabel').textContent= wmo(c.weather_code).label;
-    document.getElementById('currentIcon').textContent   = wmo(c.weather_code).emoji;
-    document.getElementById('wind').textContent          = `${Math.round(c.wind_speed_10m)} km/h`;
-    document.getElementById('humidity').textContent      = `${c.relative_humidity_2m}%`;
-    document.getElementById('visibility').textContent    = c.visibility != null ? `${(c.visibility / 1000).toFixed(1)} km` : 'N/A';
-    document.getElementById('uvIndex').textContent       = d.uv_index_max[0] != null ? `${d.uv_index_max[0]}` : 'N/A';
-
-    // Brian quote
-    const { quote, catchphrase } = getBrianQuote(c.weather_code, c.temperature_2m, c.wind_speed_10m);
-    document.getElementById('brianQuote').textContent      = `"${quote}"`;
-    document.getElementById('brianCatchphrase').textContent = `— ${catchphrase}`;
-
-    // Forecast
-    const grid = document.getElementById('forecastGrid');
-    grid.innerHTML = '';
-    for (let i = 0; i < d.time.length; i++) {
-      const card = document.createElement('div');
-      card.className = 'forecast-card' + (i === 0 ? ' today' : '');
-      card.innerHTML = `
-        <div class="forecast-day">${dayName(d.time[i], i)}</div>
-        <div class="forecast-icon">${wmo(d.weather_code[i]).emoji}</div>
-        <div class="forecast-high">${Math.round(d.temperature_2m_max[i])}°</div>
-        <div class="forecast-low">${Math.round(d.temperature_2m_min[i])}°</div>
-      `;
-      grid.appendChild(card);
-    }
+  // ── Load ──────────────────────────────────────────────────────────────────
+  function showStatus(msg) {
+    const s = document.getElementById('statusLine');
+    s.textContent = msg;
+    s.style.display = msg ? 'block' : 'none';
+  }
+  function showErr(msg) {
+    const e = document.getElementById('errPanel');
+    e.textContent = msg;
+    e.style.display = msg ? 'block' : 'none';
   }
 
-  // ── Main flow ───────────────────────────────────────────────────────────
-  function showError(msg) {
-    const el = document.getElementById('errorMsg');
-    el.textContent = `🦁 ${msg}`;
-    el.style.display = 'block';
-  }
-
-  function hideError() {
-    document.getElementById('errorMsg').style.display = 'none';
-  }
-
-  async function search(query) {
-    hideError();
-    const card    = document.getElementById('mainCard');
-    const status  = document.getElementById('statusMsg');
-    const content = document.getElementById('weatherContent');
-
-    card.classList.add('visible');
-    status.style.display = 'block';
-    content.style.display = 'none';
-
+  async function load(q) {
+    showErr('');
+    showStatus('Loading…');
+    document.getElementById('panel').classList.remove('visible');
     try {
-      const geo  = await geocode(query);
+      const geo  = await geocode(q);
       const data = await fetchWeather(geo.latitude, geo.longitude);
-      renderWeather(geo, data);
-      status.style.display  = 'none';
-      content.style.display = 'block';
+      cachedGeo  = geo;
+      cachedData = data;
+      document.getElementById('cityName').textContent  = `${geo.name}, ${geo.country}`;
+      document.getElementById('todayDate').textContent = new Date(data.daily.time[0] + 'T12:00:00')
+        .toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+      showStatus('');
+      document.getElementById('panel').classList.add('visible');
+      render();
     } catch (err) {
-      card.classList.remove('visible');
-      showError(err.message);
+      showStatus('');
+      showErr(err.message);
     }
   }
 
+  // ── Events ────────────────────────────────────────────────────────────────
   document.getElementById('searchBtn').addEventListener('click', () => {
-    const q = document.getElementById('locationInput').value.trim();
-    if (q) search(q);
+    const q = document.getElementById('locInput').value.trim();
+    if (q) load(q);
   });
-
-  document.getElementById('locationInput').addEventListener('keydown', e => {
+  document.getElementById('locInput').addEventListener('keydown', e => {
     if (e.key === 'Enter') {
-      const q = document.getElementById('locationInput').value.trim();
-      if (q) search(q);
+      const q = document.getElementById('locInput').value.trim();
+      if (q) load(q);
     }
   });
 
-  // Auto-load a fun default location on start
-  search('New York');
+  document.getElementById('runBtn').addEventListener('click', () => {
+    mode = 'run';
+    document.getElementById('runBtn').classList.add('active');
+    document.getElementById('bikeBtn').classList.remove('active');
+    if (cachedData) render();
+  });
+  document.getElementById('bikeBtn').addEventListener('click', () => {
+    mode = 'bike';
+    document.getElementById('bikeBtn').classList.add('active');
+    document.getElementById('runBtn').classList.remove('active');
+    if (cachedData) render();
+  });
+
+  load('New York');
 </script>
 </body>
 </html>
